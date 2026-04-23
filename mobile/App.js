@@ -1,158 +1,44 @@
-import React, { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { supabase } from "./lib/supabase";
 
+import AuthScreen from "./src/screens/AuthScreen";
+import DashboardScreen from "./src/screens/DashboardScreen";
+import HubScreen from "./src/screens/HubScreen";
+
+const Stack = createNativeStackNavigator();
+
 export default function App() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [session, setSession] = useState(null);
 
-  async function handleAuth() {
-    if (!email || !password || (!isLogin && !fullName)) {
-      Alert.alert("Erro", "Por favor, preencha todos os campos.");
-      return;
-    }
+  useEffect(() => {
+    // Verifica a sessão atual logo ao abrir o app
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
 
-    setLoading(true);
+    // Escuta mudanças no estado de autenticação(login/logout)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
 
-    try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        Alert.alert("Bem-vindo!", "Login realizado com sucesso.");
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: fullName } },
-        });
-        if (error) throw error;
-        Alert.alert("Sucesso!", "Cadastro realizado!");
-      }
-    } catch (error) {
-      Alert.alert("Erro", error.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>SplitCredit</Text>
-      <Text style={styles.subtitle}>
-        {isLogin ? "Faça seu login" : "Crie sua conta"}
-      </Text>
-
-      {!isLogin && (
-        <TextInput
-          style={styles.input}
-          placeholder="Nome Completo"
-          placeholderTextColor="#999"
-          value={fullName}
-          onChangeText={setFullName}
-        />
-      )}
-
-      <TextInput
-        style={styles.input}
-        placeholder="E-mail"
-        placeholderTextColor="#999"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        placeholderTextColor="#999"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleAuth}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#000" />
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {session && session.user ? (
+          // Rotas para utilizadores logados
+          <Stack.Screen name="Hub" component={HubScreen} />
         ) : (
-          <Text style={styles.buttonText}>
-            {isLogin ? "Entrar" : "Cadastrar"}
-          </Text>
+          // Rotas para utilizadores não logados
+          <Stack.Screen name="Auth" component={AuthScreen} />
         )}
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => setIsLogin(!isLogin)}
-        style={{ marginTop: 20 }}
-      >
-        <Text style={{ color: "#00D1FF" }}>
-          {isLogin ? "Não tem conta? Cadastre-se" : "Já tem conta? Faça login"}
-        </Text>
-      </TouchableOpacity>
-    </View>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#121212",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#00D1FF",
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: "#fff",
-    marginBottom: 30,
-  },
-  input: {
-    width: "100%",
-    height: 50,
-    backgroundColor: "#1E1E1E",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    color: "#fff",
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#333",
-  },
-  button: {
-    width: "100%",
-    height: 50,
-    backgroundColor: "#00D1FF",
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-  },
-  buttonText: {
-    color: "#000",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});
