@@ -7,37 +7,38 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { decode } from "base64-arraybuffer";
 import { supabase } from "../../lib/supabase";
 import { Button, Input } from "../components/AuthComponents";
+import UserAvatar from "../components/UserAvatar";
 import {
   Container,
   Header,
   AvatarButton,
+  AvatarImage,
+  AvatarFallbackText,
   SectionTitle,
   EmptyText,
   ModalOverlay,
   ModalContent,
-  CloseButton,
-  CloseButtonText,
-  AvatarContainer,
-  ProfileAvatarButton,
-  AvatarImage,
-  AvatarFallbackText,
-  EditPhotoText,
-  ProfileName,
-  ProfileEmail,
-  LogoutButton,
-  LogoutButtonText,
   FABContainer,
   FABMain,
   FABText,
   FABOption,
   FABOptionText,
+  Card,
+  CardTitle,
+  CardSubtitle,
+  CardRow,
+  CardInfoTag,
+  CardInfoText,
 } from "../components/HubComponents";
+import ProfileModal from "../components/ProfileModal";
+import CreateGroupModal from "../components/CreateGroupModal";
 
 export default function HubScreen() {
   const [loading, setLoading] = useState(true);
@@ -50,10 +51,12 @@ export default function HubScreen() {
   const [isFabOpen, setFabOpen] = useState(false);
   const [isCreateGroupModalOpen, setCreateGroupModalOpen] = useState(false);
   const [isJoinGroupModalOpen, setJoinGroupModalOpen] = useState(false);
+  const [myGroups, setMyGroups] = useState([]);
 
   // Buscar dados do perfil
   useEffect(() => {
     fetchProfile();
+    fetchGroups();
   }, []);
 
   async function fetchProfile() {
@@ -83,6 +86,27 @@ export default function HubScreen() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Busca os cartões que o usuário é dono
+  async function fetchGroups() {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("groups")
+        .select("*")
+        .eq("owner_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setMyGroups(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar grupos:", error);
     }
   }
 
@@ -162,23 +186,43 @@ export default function HubScreen() {
   return (
     <Container>
       <Header>
-        <AvatarButton onPress={() => setProfileModalOpen(true)}>
-          {profile.avatar_url ? (
-            <AvatarImage source={{ uri: profile.avatar_url }} />
-          ) : (
-            <AvatarFallbackText>
-              {profile.full_name?.charAt(0)}
-            </AvatarFallbackText>
-          )}
-        </AvatarButton>
+        <UserAvatar
+          profile={profile}
+          onPress={() => setProfileModalOpen(true)}
+          size={60}
+        />
       </Header>
 
-      {/* Listas de Cartões */}
-      <SectionTitle>Cartões que Gerencio</SectionTitle>
-      <EmptyText>Você ainda não possui cartões.</EmptyText>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Listas de Cartões */}
+        <SectionTitle>Cartões que Gerencio</SectionTitle>
+        {myGroups.length === 0 ? (
+          <EmptyText>Você ainda não possui cartões.</EmptyText>
+        ) : (
+          myGroups.map((group) => (
+            <Card
+              key={group.id}
+              onPress={() => console.log("Clicou no cartão", group.id)}
+            >
+              <CardTitle>{group.group_name}</CardTitle>
+              <CardSubtitle>{group.bank_name}</CardSubtitle>
 
-      <SectionTitle>Cartões que Participo</SectionTitle>
-      <EmptyText>Você ainda não é dependente em nenhum cartão.</EmptyText>
+              <CardRow>
+                <CardInfoTag>
+                  <CardInfoText>Vence dia {group.due_day}</CardInfoText>
+                </CardInfoTag>
+                <CardInfoTag>
+                  <CardInfoText>Convite: {group.invite_code}</CardInfoText>
+                </CardInfoTag>
+              </CardRow>
+            </Card>
+          ))
+        )}
+
+        <SectionTitle>Cartões que Participo</SectionTitle>
+        <EmptyText>Você ainda não é dependente em nenhum cartão.</EmptyText>
+        <View style={{ height: 100 }} />
+      </ScrollView>
 
       {/* FAB */}
       <FABContainer>
@@ -208,57 +252,20 @@ export default function HubScreen() {
       </FABContainer>
 
       {/* MODAL Perfil */}
-      <Modal visible={isProfileModalOpen} transparent animationType="slide">
-        <ModalOverlay>
-          <ModalContent>
-            {/* Botão de Fechar */}
-            <CloseButton onPress={() => setProfileModalOpen(false)}>
-              <CloseButtonText>Fechar</CloseButtonText>
-            </CloseButton>
-
-            {/* Seção do Avatar */}
-            <AvatarContainer>
-              <ProfileAvatarButton onPress={handlePickImage}>
-                {profile.avatar_url ? (
-                  <AvatarImage source={{ uri: profile.avatar_url }} />
-                ) : (
-                  <AvatarFallbackText>
-                    {profile.full_name?.charAt(0)}
-                  </AvatarFallbackText>
-                )}
-              </ProfileAvatarButton>
-
-              <TouchableOpacity onPress={handlePickImage}>
-                <EditPhotoText>Editar Foto</EditPhotoText>
-              </TouchableOpacity>
-            </AvatarContainer>
-
-            {/* Informações do Usuário */}
-            <ProfileName>{profile.full_name}</ProfileName>
-            <ProfileEmail>{profile.email}</ProfileEmail>
-
-            {/* Botão de Logout */}
-            <LogoutButton onPress={handleLogout}>
-              <LogoutButtonText>Sair do App</LogoutButtonText>
-            </LogoutButton>
-          </ModalContent>
-        </ModalOverlay>
-      </Modal>
+      <ProfileModal
+        isVisible={isProfileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        profile={profile}
+        onPickImage={handlePickImage}
+        onLogout={handleLogout}
+      />
 
       {/* MODAL Criar Grupo */}
-      <Modal visible={isCreateGroupModalOpen} transparent animationType="slide">
-        <ModalOverlay>
-          <ModalContent>
-            <Text style={{ color: "#00D1FF", fontSize: 20, marginBottom: 20 }}>
-              Novo Cartão
-            </Text>
-            {/* Aqui vai ter inputs de Nome, Select de Banco e Dia do Vencimento */}
-            <Button onPress={() => setCreateGroupModalOpen(false)}>
-              <Text>Cancelar</Text>
-            </Button>
-          </ModalContent>
-        </ModalOverlay>
-      </Modal>
+      <CreateGroupModal
+        isVisible={isCreateGroupModalOpen}
+        onClose={() => setCreateGroupModalOpen(false)}
+        onSuccess={fetchGroups}
+      />
     </Container>
   );
 }

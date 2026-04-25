@@ -14,20 +14,6 @@ export const Header = styled.View`
   flex-direction: row;
   justify-content: flex-end;
   margin-top: 10px;
-  margin-bottom: 20px;
-`;
-
-// Botão da foto
-export const AvatarButton = styled.TouchableOpacity`
-  width: 60px;
-  height: 60px;
-  border-radius: 30px;
-  background-color: #333;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-width: 2px;
-  border-color: #00d1ff;
 `;
 
 export const SectionTitle = styled.Text`
@@ -43,7 +29,7 @@ export const EmptyText = styled.Text`
   font-size: 16px;
 `;
 
-// Estilo do Modal
+// MODAL
 export const ModalOverlay = styled.View`
   flex: 1;
   background-color: rgba(0, 0, 0, 0.7);
@@ -56,66 +42,6 @@ export const ModalContent = styled.View`
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   min-height: 300px;
-`;
-
-export const CloseButton = styled.TouchableOpacity`
-  align-self: flex-end;
-`;
-
-export const CloseButtonText = styled.Text`
-  color: #999;
-  font-size: 18px;
-`;
-
-export const AvatarContainer = styled.View`
-  align-items: center;
-  margin-top: -10px;
-`;
-
-export const ProfileAvatarButton = styled(AvatarButton)`
-  width: 100px;
-  height: 100px;
-  border-radius: 50px;
-  margin-bottom: 10px;
-`;
-
-export const AvatarImage = styled.Image`
-  width: 100%;
-  height: 100%;
-`;
-
-export const AvatarFallbackText = styled.Text`
-  color: #00d1ff;
-`;
-
-export const EditPhotoText = styled.Text`
-  color: #00d1ff;
-  font-size: 16px;
-`;
-
-export const ProfileName = styled.Text`
-  color: #fff;
-  font-size: 24px;
-  font-weight: bold;
-  text-align: center;
-  margin-top: 20px;
-`;
-
-export const ProfileEmail = styled.Text`
-  color: #999;
-  font-size: 18px;
-  text-align: center;
-`;
-
-export const LogoutButton = styled(Button)`
-  background-color: #ff4444;
-  margin-top: 30px;
-`;
-
-export const LogoutButtonText = styled.Text`
-  color: #fff;
-  font-weight: bold;
-  font-size: 18px;
 `;
 
 // FAB
@@ -158,4 +84,48 @@ export const FABOptionText = styled.Text`
   color: #fff;
   font-size: 18px;
   font-weight: 400;
+`;
+
+// Cartões de Grupo
+export const Card = styled.TouchableOpacity`
+  background-color: #1e1e1e;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  border-left-width: 5px;
+  border-left-color: #00d1ff;
+  elevation: 3; /* Sombra no Android */
+`;
+
+export const CardTitle = styled.Text`
+  color: #fff;
+  font-size: 20px;
+  font-weight: 600;
+`;
+
+export const CardSubtitle = styled.Text`
+  color: #999;
+  font-size: 16px;
+  margin-top: 5px;
+`;
+
+export const CardRow = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top-width: 1px;
+  border-top-color: #333;
+`;
+
+export const CardInfoTag = styled.View`
+  background-color: #333;
+  padding: 5px 10px;
+  border-radius: 8px;
+`;
+
+export const CardInfoText = styled.Text`
+  color: #00d1ff;
+  font-size: 14px;
+  font-weight: bold;
 `;
