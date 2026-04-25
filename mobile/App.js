@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { supabase } from "./lib/supabase";
 
 import AuthScreen from "./src/screens/AuthScreen";
-import DashboardScreen from "./src/screens/DashboardScreen";
 import HubScreen from "./src/screens/HubScreen";
 
 const Stack = createNativeStackNavigator();

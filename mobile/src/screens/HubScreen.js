@@ -21,10 +21,20 @@ import {
   EmptyText,
   ModalOverlay,
   ModalContent,
+  CloseButton,
+  CloseButtonText,
+  AvatarContainer,
+  ProfileAvatarButton,
+  AvatarImage,
+  AvatarFallbackText,
+  EditPhotoText,
   ProfileName,
   ProfileEmail,
+  LogoutButton,
+  LogoutButtonText,
   FABContainer,
   FABMain,
+  FABText,
   FABOption,
   FABOptionText,
 } from "../components/HubComponents";
@@ -98,12 +108,12 @@ export default function HubScreen() {
       const fileExt = uri.split(".").pop();
       const fileName = `${user.id}-${Math.random()}.${fileExt}`;
 
-      // 1. Lê o arquivo nativamente pelo Expo e transforma em Base64
+      // Lê o arquivo nativamente pelo Expo e transforma em Base64
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: "base64",
       });
 
-      // 2. Sobe o binário decodificado direto pro Supabase
+      // Sobe o binário decodificado direto pro Supabase
       const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(fileName, decode(base64), {
@@ -115,13 +125,13 @@ export default function HubScreen() {
         throw uploadError;
       }
 
-      // 3. Pega a URL pública
+      // Pega a URL pública
       const { data: urlData } = supabase.storage
         .from("avatars")
         .getPublicUrl(fileName);
       const publicUrl = urlData.publicUrl;
 
-      // 4. Atualiza a tabela profiles
+      // Atualiza a tabela profiles
       const { error: dbError } = await supabase
         .from("profiles")
         .update({ avatar_url: publicUrl })
@@ -154,14 +164,11 @@ export default function HubScreen() {
       <Header>
         <AvatarButton onPress={() => setProfileModalOpen(true)}>
           {profile.avatar_url ? (
-            <Image
-              source={{ uri: profile.avatar_url }}
-              style={{ width: "100%", height: "100%" }}
-            />
+            <AvatarImage source={{ uri: profile.avatar_url }} />
           ) : (
-            <Text style={{ color: "#fff" }}>
+            <AvatarFallbackText>
               {profile.full_name?.charAt(0)}
-            </Text>
+            </AvatarFallbackText>
           )}
         </AvatarButton>
       </Header>
@@ -196,72 +203,49 @@ export default function HubScreen() {
           </>
         )}
         <FABMain onPress={() => setFabOpen(!isFabOpen)}>
-          <Text
-            style={{
-              fontSize: 30,
-              color: "#000",
-              fontWeight: "bold",
-              bottom: 2,
-            }}
-          >
-            {isFabOpen ? "×" : "+"}
-          </Text>
+          <FABText>{isFabOpen ? "×" : "+"}</FABText>
         </FABMain>
       </FABContainer>
 
-      {/* MODAL: Perfil */}
+      {/* MODAL Perfil */}
       <Modal visible={isProfileModalOpen} transparent animationType="slide">
         <ModalOverlay>
           <ModalContent>
-            <TouchableOpacity
-              onPress={() => setProfileModalOpen(false)}
-              style={{ alignSelf: "flex-end" }}
-            >
-              <Text style={{ color: "#999", fontSize: 18 }}>Fechar</Text>
-            </TouchableOpacity>
+            {/* Botão de Fechar */}
+            <CloseButton onPress={() => setProfileModalOpen(false)}>
+              <CloseButtonText>Fechar</CloseButtonText>
+            </CloseButton>
 
-            <View style={{ alignItems: "center", marginTop: -30 }}>
-              <AvatarButton
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 40,
-                  marginBottom: 10,
-                }}
-                onPress={handlePickImage}
-              >
+            {/* Seção do Avatar */}
+            <AvatarContainer>
+              <ProfileAvatarButton onPress={handlePickImage}>
                 {profile.avatar_url ? (
-                  <Image
-                    source={{ uri: profile.avatar_url }}
-                    style={{ width: "100%", height: "100%" }}
-                  />
+                  <AvatarImage source={{ uri: profile.avatar_url }} />
                 ) : (
-                  <Text style={{ color: "#fff" }}>
+                  <AvatarFallbackText>
                     {profile.full_name?.charAt(0)}
-                  </Text>
+                  </AvatarFallbackText>
                 )}
-              </AvatarButton>
-              <TouchableOpacity onPress={handlePickImage}>
-                <Text style={{ color: "#00D1FF" }}>Editar Foto</Text>
-              </TouchableOpacity>
-            </View>
+              </ProfileAvatarButton>
 
+              <TouchableOpacity onPress={handlePickImage}>
+                <EditPhotoText>Editar Foto</EditPhotoText>
+              </TouchableOpacity>
+            </AvatarContainer>
+
+            {/* Informações do Usuário */}
             <ProfileName>{profile.full_name}</ProfileName>
             <ProfileEmail>{profile.email}</ProfileEmail>
 
-            <Button
-              onPress={handleLogout}
-              style={{ backgroundColor: "#ff4444", marginTop: 30 }}
-            >
-              <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                Sair do App
-              </Text>
-            </Button>
+            {/* Botão de Logout */}
+            <LogoutButton onPress={handleLogout}>
+              <LogoutButtonText>Sair do App</LogoutButtonText>
+            </LogoutButton>
           </ModalContent>
         </ModalOverlay>
       </Modal>
 
-      {/* MODAL: Criar Grupo */}
+      {/* MODAL Criar Grupo */}
       <Modal visible={isCreateGroupModalOpen} transparent animationType="slide">
         <ModalOverlay>
           <ModalContent>

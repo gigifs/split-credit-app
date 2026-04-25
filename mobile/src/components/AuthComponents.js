@@ -5,22 +5,24 @@ export const Container = styled.View`
   background-color: #121212;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 30px;
 `;
-
+// SplitCredit
 export const Title = styled.Text`
-  font-size: 32px;
+  font-size: 40px;
   font-weight: bold;
   color: #00d1ff;
   margin-bottom: 10px;
 `;
 
+// Faça seu login/Crie sua conta
 export const Subtitle = styled.Text`
-  font-size: 18px;
+  font-size: 20px;
   color: #fff;
   margin-bottom: 30px;
 `;
 
+// Campos de cadastro
 export const Input = styled.TextInput.attrs({
   placeholderTextColor: "#999",
 })`
@@ -35,6 +37,7 @@ export const Input = styled.TextInput.attrs({
   border-color: #333;
 `;
 
+// Botão cadastro/login
 export const Button = styled.TouchableOpacity`
   width: 100%;
   height: 50px;
@@ -46,12 +49,14 @@ export const Button = styled.TouchableOpacity`
   opacity: ${(props) => (props.disabled ? 0.7 : 1)};
 `;
 
+// Entrar/Cadastrar
 export const ButtonText = styled.Text`
   color: #000;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
 `;
 
+// Troca entre login/cadastro
 export const SwitchModeText = styled.Text`
   color: #00d1ff;
   margin-top: 20px;
