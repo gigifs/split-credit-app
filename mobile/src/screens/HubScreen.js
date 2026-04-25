@@ -39,8 +39,9 @@ import {
 } from "../components/HubComponents";
 import ProfileModal from "../components/ProfileModal";
 import CreateGroupModal from "../components/CreateGroupModal";
+import JoinGroupModal from "../components/JoinGroupModal";
 
-export default function HubScreen() {
+export default function HubScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
     full_name: "",
@@ -52,11 +53,13 @@ export default function HubScreen() {
   const [isCreateGroupModalOpen, setCreateGroupModalOpen] = useState(false);
   const [isJoinGroupModalOpen, setJoinGroupModalOpen] = useState(false);
   const [myGroups, setMyGroups] = useState([]);
+  const [memberGroups, setMemberGroups] = useState([]);
 
   // Buscar dados do perfil
   useEffect(() => {
     fetchProfile();
     fetchGroups();
+    fetchMemberGroups();
   }, []);
 
   async function fetchProfile() {
@@ -107,6 +110,36 @@ export default function HubScreen() {
       setMyGroups(data || []);
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
+    }
+  }
+
+  // Busca os cartões onde o usuário é dependente
+  async function fetchMemberGroups() {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("group_members")
+        .select(
+          `
+          status,
+          groups (
+            id,
+            group_name,
+            bank_name,
+            due_day
+          )
+        `,
+        )
+        .eq("profile_id", user.id);
+
+      if (error) throw error;
+      setMemberGroups(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar grupos como dependente:", error);
     }
   }
 
@@ -202,7 +235,12 @@ export default function HubScreen() {
           myGroups.map((group) => (
             <Card
               key={group.id}
-              onPress={() => console.log("Clicou no cartão", group.id)}
+              onPress={() =>
+                navigation.navigate("CardDetails", {
+                  groupId: group.id,
+                  isOwner: true,
+                })
+              }
             >
               <CardTitle>{group.group_name}</CardTitle>
               <CardSubtitle>{group.bank_name}</CardSubtitle>
@@ -220,7 +258,44 @@ export default function HubScreen() {
         )}
 
         <SectionTitle>Cartões que Participo</SectionTitle>
-        <EmptyText>Você ainda não é dependente em nenhum cartão.</EmptyText>
+        {memberGroups.length === 0 ? (
+          <EmptyText>Você ainda não é dependente em nenhum cartão.</EmptyText>
+        ) : (
+          memberGroups.map((member) => (
+            <Card
+              key={member.groups.id}
+              onPress={() =>
+                navigation.navigate("CardDetails", {
+                  groupId: group.id,
+                  isOwner: true,
+                })
+              }
+            >
+              <CardTitle>{member.groups.group_name}</CardTitle>
+              <CardSubtitle>{member.groups.bank_name}</CardSubtitle>
+
+              <CardRow>
+                <CardInfoTag>
+                  <CardInfoText>Vence dia {member.groups.due_day}</CardInfoText>
+                </CardInfoTag>
+                <CardInfoTag
+                  style={{
+                    backgroundColor:
+                      member.status === "pendente" ? "#ffaa00" : "#333",
+                  }}
+                >
+                  <CardInfoText
+                    style={{
+                      color: member.status === "pendente" ? "#000" : "#00d1ff",
+                    }}
+                  >
+                    {member.status.toUpperCase()}
+                  </CardInfoText>
+                </CardInfoTag>
+              </CardRow>
+            </Card>
+          ))
+        )}
         <View style={{ height: 100 }} />
       </ScrollView>
 
@@ -265,6 +340,17 @@ export default function HubScreen() {
         isVisible={isCreateGroupModalOpen}
         onClose={() => setCreateGroupModalOpen(false)}
         onSuccess={fetchGroups}
+      />
+
+      {/* MODAL de Entrar em Grupo */}
+      <JoinGroupModal
+        isVisible={isJoinGroupModalOpen}
+        onClose={() => setJoinGroupModalOpen(false)}
+        onSuccess={() =>
+          console.log(
+            "Entrou no grupo! Precisa recarregar a lista de dependente",
+          )
+        }
       />
     </Container>
   );

@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { supabase } from "./lib/supabase";
 
+import CardDetailsScreen from "./src/screens/CardDetailsScreen";
 import AuthScreen from "./src/screens/AuthScreen";
 import HubScreen from "./src/screens/HubScreen";
 
@@ -31,8 +32,11 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {session && session.user ? (
-          // Rotas para utilizadores logados
-          <Stack.Screen name="Hub" component={HubScreen} />
+          <>
+            {/* Rotas para utilizadores logados */}
+            <Stack.Screen name="Hub" component={HubScreen} />
+            <Stack.Screen name="CardDetails" component={CardDetailsScreen} />
+          </>
         ) : (
           // Rotas para utilizadores não logados
           <Stack.Screen name="Auth" component={AuthScreen} />

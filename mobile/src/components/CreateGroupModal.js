@@ -23,7 +23,7 @@ const Title = styled.Text`
 `;
 
 const Label = styled.Text`
-  color: #c0c0c0;
+  color: #ccc;
   font-size: 16px;
   font-weight: 500;
   margin-bottom: 6px;
